@@ -1,25 +1,22 @@
 # -*- coding: utf-8 -*-
 """
 Initial analysis
-Goal: open .nc file in Python
+Goal: open .nc and .shp files in Python
 
 first create conda environment in miniconda:
-conda create -n spyder-env -y
-conda activate spyder-env
-conda install spyder-kernels netCDF4 -y
-conda install spyder-kernels geopandas -y
+conda create -n spyder-geo
+conda activate spyder-geo
+conda install -c conda-forge spyder-kernels
+conda install -c conda-forge geopandas 
+conda install -c conda-forge fiona 
+conda install -c conda-forge netcdf4
+
 """
 
-import os
 import netCDF4
-import numpy as np
-import matplotlib.pyplot as plt
-import geopandas
+import geopandas as gpd
+#import fiona
 
-# set the correct working directory
-from os import chdir, getcwd
-wd = getcwd()
-chdir(wd)
 
 # load in our nc file
 file = netCDF4.Dataset('daymet_data/11748_1980_prcp.nc')
@@ -28,3 +25,7 @@ lat = file.variables["lat"]
 lon = file.variables["lon"]
 latvals = lat[:]
 lonvals = lon[:]
+
+# open shapefile and plot it
+gdf = gpd.read_file("shapefiles/DaymetV4_Tiles_Continental_HI_PR.shp") # open it
+gdf.plot() # plot it
