@@ -1,3 +1,15 @@
 
 .Rhistory
 *.nc
+*.svg
+*.cpg
+*.dbf
+*.prj
+*.shp
+*.shx
+*.sbn
+*.sbx
+*.jpg
+*.shp
+shapefiles/DaymetV4_Tiles_Continental_HI_PR/DaymetV4_Tiles_Continental_HI_PR.shp.xml
+shapefiles/NHD_H_0410_HU4_Shape/NHD_H_0410_HU4_Shape.xml
