@@ -20,7 +20,7 @@ import xarray as xr
 import numpy as np
 #import netCDF4
 
-#%% x array
+#%% x array - open precip datafiles
 
 # Open our .nc files
 # Tile 1
@@ -249,7 +249,7 @@ station_data['LonRi'] = LonRi.copy()
 station_data['LonCi'] = LonCi.copy()
  
  
-#%% Let's grab data from one station for 1980:
+#%% Let's grab precip data from each station for 1980:
     
 # Let's initialize a dataframe:
 ones_data = np.ones(shape=(365,len(station_data)))*-999
@@ -305,7 +305,7 @@ for x in range(len(station_data)):
 # Finally, let's drop columns with nans
 PrecipDataClean = PrecipData.dropna(axis=1)
 
-#%% Let's create a correlation matrix for our stations.
+# Now, Let's create a correlation matrix for our stations.
 f = plt.figure(figsize=(19, 15))
 plt.matshow(PrecipDataClean.corr(), fignum=f.number)
 plt.xticks(range(PrecipDataClean.select_dtypes(['number']).shape[1]), PrecipDataClean.select_dtypes(['number']).columns, fontsize=14, rotation=45)
@@ -316,6 +316,7 @@ plt.title('Correlation Matrix for daily precipitation, 1980', fontsize=16);
 
 # save the figure
 plt.savefig("exports/correlation_matrix.svg")
+
 #%% Try printing a precip stack
 
 ds1a_grab = ds1a['prcp'][364,:,:]
