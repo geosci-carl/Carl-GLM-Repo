@@ -107,11 +107,11 @@ def find_nearest(target_lat, target_lon):
   min_lat = np.ones(6) # initialize min results
   
   # step through lats for each of the six tiles:
-  dif = np.absolute(lats_ds1_numpy-target_lat)
-  ri, ci = dif.argmin()//dif.shape[1], dif.argmin()%dif.shape[1]
-  indices_lat[0,0] = ri
-  indices_lat[1,0] = ci
-  min_lat[0] = dif[ri,ci]
+  dif = np.absolute(lats_ds1_numpy-target_lat) #
+  ri, ci = dif.argmin()//dif.shape[1], dif.argmin()%dif.shape[1] #
+  indices_lat[0,0] = ri #
+  indices_lat[1,0] = ci #
+  min_lat[0] = dif[ri,ci] #
   
   dif = np.absolute(lats_ds2_numpy-target_lat)
   ri, ci = dif.argmin()//dif.shape[1], dif.argmin()%dif.shape[1]
@@ -247,8 +247,9 @@ station_data['LatRi'] = LatRi.copy()
 station_data['LatCi'] = LatCi.copy()
 station_data['LonRi'] = LonRi.copy()
 station_data['LonCi'] = LonCi.copy()
-  
-#%% Now let's grab precip, tempmin and tempmax for our stations!
+ 
+ 
+#%% Try printing a precip stack
 
 ds1a_grab = ds1a['prcp'][364,:,:]
 ds2a_grab = ds2a['prcp'][364,:,:]
@@ -299,7 +300,38 @@ plt.plot(station_target_prcp_numpy,'.')
 plt.title("KAKR Akron Fulton Intl. Airport - Daily Precip for 1980") 
 plt.xlabel("Day") 
 plt.ylabel("Precipitation [mm]") 
-plt.savefig("exports/KAKR.svg")
+plt.savefig("exports/KAKR_precip1.svg")
+
+station_target_prcp = ds1b['prcp'][:,myLatRi,myLatCi]
+station_target_prcp_numpy = station_target_prcp.to_numpy()
+
+plt.plot(station_target_prcp_numpy,'.')
+plt.title("KAKR Akron Fulton Intl. Airport - Daily Precip for 1981") 
+plt.xlabel("Day") 
+plt.ylabel("Precipitation [mm]") 
+plt.savefig("exports/KAKR_precip2.svg")
+
+station_target_prcp = ds1c['prcp'][:,myLatRi,myLatCi]
+station_target_prcp_numpy = station_target_prcp.to_numpy()
+
+plt.plot(station_target_prcp_numpy,'.')
+plt.title("KAKR Akron Fulton Intl. Airport - Daily Precip for 1982") 
+plt.xlabel("Day") 
+plt.ylabel("Precipitation [mm]") 
+plt.savefig("exports/KAKR_precip3.svg")
+
+station_target_prcp = ds1d['prcp'][:,myLatRi,myLatCi]
+station_target_prcp_numpy = station_target_prcp.to_numpy()
+
+plt.plot(station_target_prcp_numpy,'.')
+plt.title("KAKR Akron Fulton Intl. Airport - Daily Precip for 1983") 
+plt.xlabel("Day") 
+plt.ylabel("Precipitation [mm]") 
+plt.savefig("exports/KAKR_precip4.svg")
+
+
+
+
 
 #%%    
 # A Python dictionary is a key-value pair. You input the key, 
