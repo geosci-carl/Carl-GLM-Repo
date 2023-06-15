@@ -305,6 +305,17 @@ for x in range(len(station_data)):
 # Finally, let's drop columns with nans
 PrecipDataClean = PrecipData.dropna(axis=1)
 
+#%% Let's create a correlation matrix for our stations.
+f = plt.figure(figsize=(19, 15))
+plt.matshow(PrecipDataClean.corr(), fignum=f.number)
+plt.xticks(range(PrecipDataClean.select_dtypes(['number']).shape[1]), PrecipDataClean.select_dtypes(['number']).columns, fontsize=14, rotation=45)
+plt.yticks(range(PrecipDataClean.select_dtypes(['number']).shape[1]), PrecipDataClean.select_dtypes(['number']).columns, fontsize=14)
+cb = plt.colorbar()
+cb.ax.tick_params(labelsize=14)
+plt.title('Correlation Matrix for daily precipitation, 1980', fontsize=16);
+
+# save the figure
+plt.savefig("exports/correlation_matrix.svg")
 #%% Try printing a precip stack
 
 ds1a_grab = ds1a['prcp'][364,:,:]
