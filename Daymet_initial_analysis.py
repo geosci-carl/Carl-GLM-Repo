@@ -249,6 +249,62 @@ station_data['LonRi'] = LonRi.copy()
 station_data['LonCi'] = LonCi.copy()
  
  
+#%% Let's grab data from one station for 1980:
+    
+# Let's initialize a dataframe:
+ones_data = np.ones(shape=(365,len(station_data)))*-999
+PrecipData = pd.DataFrame(ones_data, columns=station_data["STID"])
+
+for x in range(len(station_data)):
+    # Grab the right station key.
+    MyColumn = station_data["STID"][x] 
+    
+    # First, select the right tile.
+    MyTileIndex = station_data["TileIndex"][x]
+    if MyTileIndex == 0:
+        MyTile = ds1a
+        MyLats = lats_ds1_numpy
+        MyLons = lons_ds1_numpy
+        
+    if MyTileIndex == 1:
+        MyTile = ds2a    
+        MyLats = lats_ds2_numpy
+        MyLons = lons_ds2_numpy
+      
+    if MyTileIndex == 2:
+        MyTile = ds3a
+        MyLats = lats_ds3_numpy
+        MyLons = lons_ds3_numpy
+        
+    if MyTileIndex == 3:
+        MyTile = ds4a 
+        MyLats = lats_ds4_numpy
+        MyLons = lons_ds4_numpy
+    
+    if MyTileIndex == 4:
+        MyTile = ds5a 
+        MyLats = lats_ds5_numpy
+        MyLons = lons_ds5_numpy
+        
+    if MyTileIndex == 5:
+        MyTile = ds6a
+        MyLats = lats_ds6_numpy
+        MyLons = lons_ds6_numpy     
+        
+    # Second, grab the right indices
+    MyLatRi = station_data["LatRi"][x]
+    MyLatCi = station_data["LatCi"][x]
+    
+    # Third, grab the temperature series
+    MyPrecip = MyTile["prcp"][:,int(MyLatRi),int(MyLatCi)]
+    #MyPrecipNumpy = MyPrecip.to_numpy()
+    
+    # Assign the results
+    PrecipData[MyColumn] = MyPrecip
+
+# Finally, let's drop columns with nans
+PrecipDataClean = PrecipData.dropna(axis=1)
+
 #%% Try printing a precip stack
 
 ds1a_grab = ds1a['prcp'][364,:,:]
