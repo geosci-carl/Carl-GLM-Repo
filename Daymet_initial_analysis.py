@@ -316,15 +316,9 @@ cb.ax.tick_params(labelsize=14)
 plt.title('Correlation Matrix for daily precipitation, 1980', fontsize=16);
 
 # save the figure
-#plt.savefig("exports/correlation_matrix.svg")
+plt.savefig("exports/correlation_matrix.svg")
 
 #%% Let's try building a master data dictionary over all 42 years (1980 - 2021)
-
-# drop the irrelevant stations ########## WE WILL RETURN TO THIS!!!!
-#df = df.drop('column_name', axis=1)
-#MyStations = PrecipDataClean.drop(,axis=1)
-Stations = PrecipDataClean # for now, let's just push forward
-StationNames = list(Stations.columns) # grab station names
 
 # CREATE MASTER DICTIONARIES ####################################################
 
@@ -352,14 +346,74 @@ for n in range(0,len(MyTiles)): # Loop over tiles
     if n==5:
         print('MISCHIEF MANAGED!')        
 
-#%% Let's grab precip data from each station for all 42 years (1980 - 2021):
+#%% Let's grab precip data from each station for all 41 years (1980 - 2021):
 ## Create
-#MyMap = {} # create empty MyMap dictionary
+    
+# Let's initialize a dataframe:
+ones_data = np.ones(shape=(len(MyYears),len(station_data)))*-999
+PrecipData = pd.DataFrame(ones_data, columns=station_data["STID"])
+MyYears = list(range(1980,2022,)) # create sequence of years for year loop
+PrecipData.index =  MyYears
 
-# Add station keys
-#for n in range(0,len(StationNames),): # automate creating each key
-  #  MyStation = StationNames[n]
-  #  MyMap[MyStation]={} # add station keys to MyMap
+for n in range(len(station_data)):
+    # Grab the right station key.
+    MyColumn = station_data["STID"][n] 
+    print('Starting '+MyColumn)
+    
+    # select the right tile.
+    #MyTiles = [11748,11749,11750,11928,11929,11930]
+    MyTileIndex = station_data["TileIndex"][n]
+    if MyTileIndex == 0:
+        MyTile = 11748
+        
+    if MyTileIndex == 1:
+        MyTile = 11749    
+     
+    if MyTileIndex == 2:
+        MyTile = 11750
+        
+    if MyTileIndex == 3:
+        MyTile = 11928
+    
+    if MyTileIndex == 4:
+        MyTile = 11929
+
+    if MyTileIndex == 5:
+        MyTile = 11930  
+        
+    # grab the right indices
+    MyLatRi = station_data["LatRi"][n]
+    MyLatCi = station_data["LatCi"][n]
+    
+    for x in range(0,len(MyYears),):
+        MyYear = MyYears[x]
+        print(MyYear)
+        
+        # grab the temperature series
+        MyPrecip = MyData[MyTile][MyYear]['prcp']['prcp'][:,int(MyLatRi),int(MyLatCi)]
+        MyPrecipSum = sum(MyPrecip)
+        #MyPrecipSumNumpy = MyPrecipSum.to_numpy()
+        
+        # Assign the results
+        PrecipData[MyColumn][MyYear] = MyPrecipSum
+    
+    if n==30:
+        print('Mischief Managed!')
+
+# Finally, let's drop columns with nans
+PrecipDataClean = PrecipData.dropna(axis=1)
+
+# Now, Let's create a correlation matrix for our stations.
+f = plt.figure(figsize=(19, 15))
+plt.matshow(PrecipDataClean.corr(), fignum=f.number)
+plt.xticks(range(PrecipDataClean.select_dtypes(['number']).shape[1]), PrecipDataClean.select_dtypes(['number']).columns, fontsize=14, rotation=45)
+plt.yticks(range(PrecipDataClean.select_dtypes(['number']).shape[1]), PrecipDataClean.select_dtypes(['number']).columns, fontsize=14)
+cb = plt.colorbar()
+cb.ax.tick_params(labelsize=14)
+plt.title('Correlation Matrix for yearly precipitation, 1980-2021', fontsize=16);
+
+# save the figure
+plt.savefig("exports/correlation_matrix.svg")
 
 
     
