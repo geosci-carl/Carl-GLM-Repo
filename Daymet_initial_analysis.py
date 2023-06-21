@@ -29,6 +29,7 @@ ds1b = xr.open_dataset('daymet_data/11748_1981_prcp.nc')
 ds1c = xr.open_dataset('daymet_data/11748_1982_prcp.nc')
 ds1d = xr.open_dataset('daymet_data/11748_1983_prcp.nc')
 
+
 # Tile 2
 ds2a = xr.open_dataset('daymet_data/11749_1980_prcp.nc')
 ds2b = xr.open_dataset('daymet_data/11749_1981_prcp.nc')
@@ -315,8 +316,53 @@ cb.ax.tick_params(labelsize=14)
 plt.title('Correlation Matrix for daily precipitation, 1980', fontsize=16);
 
 # save the figure
-plt.savefig("exports/correlation_matrix.svg")
+#plt.savefig("exports/correlation_matrix.svg")
 
+#%% Let's try building a master data dictionary over all 42 years (1980 - 2021)
+
+# drop the irrelevant stations ########## WE WILL RETURN TO THIS!!!!
+#df = df.drop('column_name', axis=1)
+#MyStations = PrecipDataClean.drop(,axis=1)
+Stations = PrecipDataClean # for now, let's just push forward
+StationNames = list(Stations.columns) # grab station names
+
+# CREATE MASTER DICTIONARIES ####################################################
+
+## Create Data Dictionary
+MyData = {11748:{},11749:{},11750:{},11928:{},11929:{},11930:{}} # create empty MyData dictionary
+MyYears = list(range(1980,2022,)) # create sequence of years for year loop
+MyTiles = [11748,11749,11750,11928,11929,11930]
+
+## Populate data dictionary
+for n in range(0,len(MyTiles)): # Loop over tiles
+    MyTile = MyTiles[n]
+    print('starting tile '+str(MyTile))
+    
+    for x in range(0,len(MyYears),): # Within each tile, loop over years
+        MyYear = MyYears[x]
+        MyFile_precip = 'daymet_data/'+ str(MyTile) + '_' + str(MyYear) + '_prcp.nc'
+        MyFile_tmin = 'daymet_data/'+ str(MyTile) + '_' + str(MyYear) + '_tmin.nc'
+        MyFile_tmax = 'daymet_data/'+ str(MyTile) + '_' + str(MyYear) + '_tmax.nc'
+        nc_precip = xr.open_dataset(MyFile_precip) # grab precip
+        nc_tmin = xr.open_dataset(MyFile_tmin) # grab tmin
+        nc_tmax = xr.open_dataset(MyFile_tmax) # grab tmax
+        
+        MyData[MyTile][MyYear]={'prcp': nc_precip, 'tmin':nc_tmin, 'tmax':nc_tmax} # Make dictionary!
+    
+    if n==5:
+        print('MISCHIEF MANAGED!')        
+
+#%% Let's grab precip data from each station for all 42 years (1980 - 2021):
+## Create
+#MyMap = {} # create empty MyMap dictionary
+
+# Add station keys
+#for n in range(0,len(StationNames),): # automate creating each key
+  #  MyStation = StationNames[n]
+  #  MyMap[MyStation]={} # add station keys to MyMap
+
+
+    
 #%% Try printing a precip stack
 
 ds1a_grab = ds1a['prcp'][364,:,:]
@@ -432,7 +478,7 @@ MyMap['41,-84'][1980]={} # add key 1980 empty dictionary to MyMap
 MyMap['41,-84'][1980][364]={'prcp': 8, 'HUC6':True, 'TempMin':12, 'TempMax':32}
 
 
-
+MyMap = {}
 
 #%%
 #Plot
