@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 import geopandas as gpd
 import xarray as xr
 import numpy as np
+import time
 #import netCDF4
 
 #%% x array - open precip datafiles
@@ -341,14 +342,86 @@ for n in range(0,len(MyTiles)): # Loop over tiles
         nc_tmin = xr.open_dataset(MyFile_tmin) # grab tmin
         nc_tmax = xr.open_dataset(MyFile_tmax) # grab tmax
         
-        MyData[MyTile][MyYear]={'prcp': nc_precip, 'tmin':nc_tmin, 'tmax':nc_tmax} # Make dictionary!
+        MyData[MyTile][MyYear]={'prcp': nc_precip['prcp'], 'tmin':nc_tmin['tmin'], 'tmax':nc_tmax['tmax']} # Make dictionary!
     
     if n==5:
         print('MISCHIEF MANAGED!')        
 
-#%% Let's grab precip data from each station for all 41 years (1980 - 2021):
-## Create
+#%% Let's try building a master array data structure using arrays over all 42 years (1980 - 2021)
+
+MyYears = list(range(1980,2022,)) # create sequence of years for year loop
+MyTiles = [11748,11749,11750,11928,11929,11930]
+
+# I need 3D matrices:
+    # each entry in order is x-index, y-index, and the year (or year and day)
+    # float is 8 bytes: 8 bytes * 237*196*42*365
+
+# Create our float arrays (x-index, y-index, years, dates) # generalize this later
+tile1_prcp = np.zeros((237,196,42,365)) # 11748 (y,x,year,day)
+tile2_prcp = np.zeros((239,200,42,365)) # 11749 (y,x,year,day)  
+tile3_prcp = np.zeros((243,204,42,365)) # 11750 (y,x,year,day)
+tile4_prcp = np.zeros((236,190,42,365)) # 11928 (y,x,year,day)
+tile5_prcp = np.zeros((239,195,42,365)) # 11929 (y,x,year,day)
+tile6_prcp = np.zeros((242,199,42,365)) # 11930 (y,x,year,day)
+
+MyTileNames = [tile1_prcp, tile2_prcp, tile3_prcp, tile4_prcp, tile5_prcp, tile6_prcp]
+
+## Populate our arrays
+start = time.time() # let's time this (Run 1: 160.166 seconds)
+for n in range(0,len(MyTiles)): # Loop over tiles
+    MyTile = MyTiles[n]
+    print('starting tile '+str(MyTile))
     
+    for x in range(0,len(MyYears),): # Within each tile, loop over years
+        MyYear = MyYears[x]
+        print(MyYear)
+        MyFile_precip = 'daymet_data/'+ str(MyTile) + '_' + str(MyYear) + '_prcp.nc'
+        #MyFile_tmin = 'daymet_data/'+ str(MyTile) + '_' + str(MyYear) + '_tmin.nc'
+        #MyFile_tmax = 'daymet_data/'+ str(MyTile) + '_' + str(MyYear) + '_tmax.nc'
+        nc_precip = xr.open_dataset(MyFile_precip) # grab precip
+        #nc_tmin = xr.open_dataset(MyFile_tmin) # grab tmin
+        #nc_tmax = xr.open_dataset(MyFile_tmax) # grab tmax
+        
+        for i in range(0,365):
+            MyTileNames[n][:,:,x,i] = nc_precip['prcp'][i,:,:]
+            
+
+
+        #MyData[MyTile][MyYear]={'prcp': nc_precip['prcp'], 'tmin':nc_tmin['tmin'], 'tmax':nc_tmax['tmax']} # Make dictionary!
+    
+    if n==5:
+        end = time.time()
+        print('duration:')
+        print(end - start)
+        print('MISCHIEF MANAGED!')        
+        
+
+
+#%% Let's grab precip data from each station for all 41 years (1980 - 2021):
+## Sum precip across the days of each year for all tiles
+
+# initialize new summed tiles
+tile1_prcp_summed = np.zeros((237,196,42)) # 11748 (y,x,year,day)
+tile2_prcp_summed = np.zeros((239,200,42)) # 11749 (y,x,year,day)  
+tile3_prcp_summed = np.zeros((243,204,42)) # 11750 (y,x,year,day)
+tile4_prcp_summed = np.zeros((236,190,42)) # 11928 (y,x,year,day)
+tile5_prcp_summed = np.zeros((239,195,42)) # 11929 (y,x,year,day)
+tile6_prcp_summed = np.zeros((242,199,42)) # 11930 (y,x,year,day)
+
+MyTileNames_Summed = [tile1_prcp_summed, tile2_prcp_summed, tile3_prcp_summed, tile4_prcp_summed, tile5_prcp_summed, tile6_prcp_summed]
+
+# sum across the days of each year
+start = time.time() # let's time this (Run 1: 160.166 seconds)
+for i in range(0,len(MyTileNames)):
+    MyTileNames_Summed[i][:,:,:] = np.sum(MyTileNames[i],axis=3)
+
+end = time.time()
+print('duration:')
+print(end - start) # run 1: 4.744 seconds!!!
+print('MISCHIEF MANAGED!')  
+    
+## Grab data for each station
+
 # Let's initialize a dataframe:
 ones_data = np.ones(shape=(len(MyYears),len(station_data)))*-999
 PrecipData = pd.DataFrame(ones_data, columns=station_data["STID"])
@@ -385,20 +458,9 @@ for n in range(len(station_data)):
     MyLatRi = station_data["LatRi"][n]
     MyLatCi = station_data["LatCi"][n]
     
-    for x in range(0,len(MyYears),):
-        MyYear = MyYears[x]
-        print(MyYear)
-        
-        # grab the temperature series
-        MyPrecip = MyData[MyTile][MyYear]['prcp']['prcp'][:,int(MyLatRi),int(MyLatCi)]
-        MyPrecipSum = sum(MyPrecip)
-        #MyPrecipSumNumpy = MyPrecipSum.to_numpy()
-        
-        # Assign the results
-        PrecipData[MyColumn][MyYear] = MyPrecipSum
     
-    if n==30:
-        print('Mischief Managed!')
+    
+
 
 # Finally, let's drop columns with nans
 PrecipDataClean = PrecipData.dropna(axis=1)
