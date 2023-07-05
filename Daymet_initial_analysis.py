@@ -397,9 +397,11 @@ for n in range(0,len(MyTiles)): # Loop over tiles
         
 
 
-#%% Let's grab precip data from each station for all 41 years (1980 - 2021):
-## Sum precip across the days of each year for all tiles
+#%% Let's grab precip data from each station for all 41 years (1980 - 2021)
 
+start = time.time() # let's time this (Run 1: 160.166 seconds)
+
+## Sum precip across the days of each year for all tiles
 # initialize new summed tiles
 tile1_prcp_summed = np.zeros((237,196,42)) # 11748 (y,x,year,day)
 tile2_prcp_summed = np.zeros((239,200,42)) # 11749 (y,x,year,day)  
@@ -411,15 +413,10 @@ tile6_prcp_summed = np.zeros((242,199,42)) # 11930 (y,x,year,day)
 MyTileNames_Summed = [tile1_prcp_summed, tile2_prcp_summed, tile3_prcp_summed, tile4_prcp_summed, tile5_prcp_summed, tile6_prcp_summed]
 
 # sum across the days of each year
-start = time.time() # let's time this (Run 1: 160.166 seconds)
+
 for i in range(0,len(MyTileNames)):
     MyTileNames_Summed[i][:,:,:] = np.sum(MyTileNames[i],axis=3)
 
-end = time.time()
-print('duration:')
-print(end - start) # run 1: 4.744 seconds!!!
-print('MISCHIEF MANAGED!')  
-    
 ## Grab data for each station
 
 # Let's initialize a dataframe:
@@ -435,32 +432,19 @@ for n in range(len(station_data)):
     
     # select the right tile.
     #MyTiles = [11748,11749,11750,11928,11929,11930]
-    MyTileIndex = station_data["TileIndex"][n]
-    if MyTileIndex == 0:
-        MyTile = 11748
-        
-    if MyTileIndex == 1:
-        MyTile = 11749    
-     
-    if MyTileIndex == 2:
-        MyTile = 11750
-        
-    if MyTileIndex == 3:
-        MyTile = 11928
-    
-    if MyTileIndex == 4:
-        MyTile = 11929
-
-    if MyTileIndex == 5:
-        MyTile = 11930  
+    MyTileIndex = station_data["TileIndex"][n] 
         
     # grab the right indices
     MyLatRi = station_data["LatRi"][n]
     MyLatCi = station_data["LatCi"][n]
     
+    # grab the summed data
+    PrecipData[MyColumn] = MyTileNames_Summed[int(MyTileIndex)][int(MyLatRi),int(MyLatCi),:]
     
-    
-
+end = time.time()
+print('duration:')
+print(end - start) # run 1: 5.137 seconds!!!
+print('MISCHIEF MANAGED!')  
 
 # Finally, let's drop columns with nans
 PrecipDataClean = PrecipData.dropna(axis=1)
@@ -476,9 +460,7 @@ plt.title('Correlation Matrix for yearly precipitation, 1980-2021', fontsize=16)
 
 # save the figure
 plt.savefig("exports/correlation_matrix.svg")
-
-
-    
+   
 #%% Try printing a precip stack
 
 ds1a_grab = ds1a['prcp'][364,:,:]
