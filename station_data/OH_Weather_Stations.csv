@@ -1,4 +1,4 @@
-STID,Station Name,State,TimeZone,DayTimeSaving,Latitude,Longitude,Elevation
+Code,Station Name,State,TimeZone,DayTimeSaving,Latitude,Longitude,Elevation
 KAKR,Akron Fulton International Airport,OH,E,y,41.033,-81.467,1043.96
 KAOH,Lima Allen County Airport,OH,E,y,40.71,-84.03,971.129
 KBJJ,"Wooster, Wayne County Airport",OH,E,y,40.87,-81.89,1135.17

@@ -15,3 +15,6 @@ shapefiles/DaymetV4_Tiles_Continental_HI_PR/DaymetV4_Tiles_Continental_HI_PR.shp
 shapefiles/NHD_H_0410_HU4_Shape/NHD_H_0410_HU4_Shape.xml
 shapefiles/WBD_04_HU2_Shape/WBD_04_HU2_Shape.xml
 *.npy
+shapefiles/WBD_04_HU2_Shape.zip
+centroids/Centroids_HUC12.xlsx
+centroids/Centroids_HUC12.qmd

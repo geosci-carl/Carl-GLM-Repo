@@ -71,10 +71,18 @@ lons_ds4_numpy = lons_ds4.to_numpy()
 lons_ds5_numpy = lons_ds5.to_numpy()
 lons_ds6_numpy = lons_ds6.to_numpy()
 
-#%% Grab station data   
+#%% Grab location data 
 
-# Grab station data
-station_data = pd.read_csv('station_data/OH_Weather_Stations.csv')
+stations = False # load station data?
+huc12s = True # load huc 12 centroid data?
+
+if stations:
+    # Grab station data
+    locations = pd.read_csv('station_data/OH_Weather_Stations.csv')
+
+if huc12s:
+    # Grab centroid data
+    locations = pd.read_csv('centroids/Centroids_HUC12_lite.csv')
 
 #%% Build a function to find index of nearest 
 
@@ -195,14 +203,14 @@ def find_nearest(target_lat, target_lon):
   # my_lat_ci = indices_lat[1,n] # latitude column index
   # my_lon_ri = indices_lon[0,n] # longitude row index
   # my_lon_ci = indices_lon[1,n] # longitude column index
-empty_col = np.ones(len(station_data.axes[0]))*-999
-station_data['TileIndex'] = empty_col.copy()
-station_data['LatRi'] = empty_col.copy()
-station_data['LatCi'] = empty_col.copy()
-station_data['LonRi'] = empty_col.copy()
-station_data['LonCi'] = empty_col.copy()
+empty_col = np.ones(len(locations.axes[0]))*-999
+locations['TileIndex'] = empty_col.copy()
+locations['LatRi'] = empty_col.copy()
+locations['LatCi'] = empty_col.copy()
+locations['LonRi'] = empty_col.copy()
+locations['LonCi'] = empty_col.copy()
 
-n = len(station_data.axes[0]) # number of iterations
+n = len(locations.axes[0]) # number of iterations
 
 # Initialize
 TileIndex = empty_col.copy()
@@ -212,8 +220,8 @@ LonRi = empty_col.copy()
 LonCi = empty_col.copy()
 
 for x in range(n):
-  target_lat = station_data['Latitude'][x]
-  target_lon = station_data['Longitude'][x]
+  target_lat = locations['Latitude'][x]
+  target_lon = locations['Longitude'][x]
   
   nearest = find_nearest(target_lat, target_lon)
   
@@ -224,11 +232,11 @@ for x in range(n):
   LonCi[x] = nearest[4]
   
 # Assign our answers!
-station_data['TileIndex'] = TileIndex.copy()
-station_data['LatRi'] = LatRi.copy()
-station_data['LatCi'] = LatCi.copy()
-station_data['LonRi'] = LonRi.copy()
-station_data['LonCi'] = LonCi.copy()
+locations['TileIndex'] = TileIndex.copy()
+locations['LatRi'] = LatRi.copy()
+locations['LatCi'] = LatCi.copy()
+locations['LonRi'] = LonRi.copy()
+locations['LonCi'] = LonCi.copy()
  
  
 #%% Let's try building a master array data structure using arrays over all 42 years (1980 - 2021)
@@ -315,7 +323,7 @@ print(end - start)
 print('MISCHIEF MANAGED!') 
 
 #%% Load our arrays
-start = time.time() # let's time this # Run 1: 1.40 mins
+start = time.time() # let's time this # Run 1: 1.40 mins # Run 2: 1.11 mins
 
 tile1_prcp = np.load('tile1_prcp.npy')
 tile2_prcp = np.load('tile2_prcp.npy')
@@ -343,9 +351,9 @@ print('duration:')
 print(end - start)
 print('MISCHIEF MANAGED!') 
 
-#%% Let's grab precip data from each station for all 41 years (1980 - 2021)
+#%% Let's grab precip data from each location for all 41 years (1980 - 2021)
 
-start = time.time() # let's time this (Run 1: 4.8290 seconds)
+start = time.time() # let's time this (Run 1: 5.06 seconds)
 
 ## Sum precip across the days of each year for all tiles
 # initialize new summed tiles
@@ -356,6 +364,13 @@ tile4_prcp_summed = np.zeros((236,190,42)) # 11928 (y,x,year,day)
 tile5_prcp_summed = np.zeros((239,195,42)) # 11929 (y,x,year,day)
 tile6_prcp_summed = np.zeros((242,199,42)) # 11930 (y,x,year,day)
 
+
+MyYears = list(range(1980,2022,)) # create sequence of years for year loop
+MyTiles = [11748,11749,11750,11928,11929,11930]
+
+MyTileNames_Prcp = [tile1_prcp, tile2_prcp, tile3_prcp, tile4_prcp, tile5_prcp, tile6_prcp]
+MyTileNames_Tmin = [tile1_tmin, tile2_tmin, tile3_tmin, tile4_tmin, tile5_tmin, tile6_tmin]
+MyTileNames_Tmax = [tile1_tmax, tile2_tmax, tile3_tmax, tile4_tmax, tile5_tmax, tile6_tmax]
 MyTileNames_Prcp_Summed = [tile1_prcp_summed, tile2_prcp_summed, tile3_prcp_summed, tile4_prcp_summed, tile5_prcp_summed, tile6_prcp_summed]
 
 # sum across the days of each year
@@ -366,36 +381,36 @@ for i in range(0,len(MyTileNames_Prcp)):
 ## Grab data for each station
 
 # Let's initialize a dataframe:
-ones_data = np.ones(shape=(len(MyYears),len(station_data)))*-999
-PrecipData = pd.DataFrame(ones_data, columns=station_data["STID"])
+ones_data = np.ones(shape=(len(MyYears),len(locations)))*-999
+PrecipData = pd.DataFrame(ones_data, columns=locations["Code"])
 MyYears = list(range(1980,2022,)) # create sequence of years for year loop
 PrecipData.index =  MyYears
 
-for n in range(len(station_data)):
+for n in range(len(locations)):
     # Grab the right station key.
-    MyColumn = station_data["STID"][n] 
+    MyColumn = locations["Code"][n] 
     print('Starting '+MyColumn)
     
     # select the right tile.
     #MyTiles = [11748,11749,11750,11928,11929,11930]
-    MyTileIndex = station_data["TileIndex"][n] 
+    MyTileIndex = locations["TileIndex"][n] 
         
     # grab the right indices
-    MyLatRi = station_data["LatRi"][n]
-    MyLatCi = station_data["LatCi"][n]
+    MyLatRi = locations["LatRi"][n]
+    MyLatCi = locations["LatCi"][n]
     
     # grab the summed data
     PrecipData[MyColumn] = MyTileNames_Prcp_Summed[int(MyTileIndex)][int(MyLatRi),int(MyLatCi),:]
+
+# Finally, let's drop columns with nans
+PrecipDataClean = PrecipData.dropna(axis=1)
     
 end = time.time()
 print('duration:')
 print(end - start)
 print('MISCHIEF MANAGED!')  
 
-# Finally, let's drop columns with nans
-PrecipDataClean = PrecipData.dropna(axis=1)
-
-# Now, Let's create a correlation matrix for our stations.
+#%%  Now, Let's create a precip correlation matrix for our stations.
 f = plt.figure(figsize=(19, 15))
 plt.matshow(PrecipDataClean.corr(), fignum=f.number)
 plt.xticks(range(PrecipDataClean.select_dtypes(['number']).shape[1]), PrecipDataClean.select_dtypes(['number']).columns, fontsize=14, rotation=45)
