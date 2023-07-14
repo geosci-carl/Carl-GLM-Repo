@@ -7,15 +7,14 @@ first create conda environment in miniconda:
 conda create -n spyder-geo
 conda activate spyder-geo
 conda install -c conda-forge spyder-kernels
-conda install -c conda-forge geopandas 
-conda install -c conda-forge netcdf4
+conda install -c conda-forge spyder
 conda install -c conda-forge xarray
 
 """
 #%%
 import pandas as pd
 import matplotlib.pyplot as plt
-import geopandas as gpd
+#import geopandas as gpd
 import xarray as xr
 import numpy as np
 import time
@@ -26,39 +25,21 @@ import time
 # Open our .nc files
 # Tile 1
 ds1a = xr.open_dataset('daymet_data/11748_1980_prcp.nc')
-# ds1b = xr.open_dataset('daymet_data/11748_1981_prcp.nc')
-# ds1c = xr.open_dataset('daymet_data/11748_1982_prcp.nc')
-# ds1d = xr.open_dataset('daymet_data/11748_1983_prcp.nc')
 
 # Tile 2
 ds2a = xr.open_dataset('daymet_data/11749_1980_prcp.nc')
-# ds2b = xr.open_dataset('daymet_data/11749_1981_prcp.nc')
-# ds2c = xr.open_dataset('daymet_data/11749_1982_prcp.nc')
-# ds2d = xr.open_dataset('daymet_data/11749_1983_prcp.nc')
 
 # Tile 3
 ds3a = xr.open_dataset('daymet_data/11750_1980_prcp.nc')
-#ds3b = xr.open_dataset('daymet_data/11750_1981_prcp.nc')
-#ds3c = xr.open_dataset('daymet_data/11750_1982_prcp.nc')
-#ds3d = xr.open_dataset('daymet_data/11750_1983_prcp.nc')
 
 # Tile 4
 ds4a = xr.open_dataset('daymet_data/11928_1980_prcp.nc')
-#ds4b = xr.open_dataset('daymet_data/11928_1980_prcp.nc')
-#ds4c = xr.open_dataset('daymet_data/11928_1980_prcp.nc')
-#ds4d = xr.open_dataset('daymet_data/11928_1980_prcp.nc')
 
 # Tile 5
 ds5a = xr.open_dataset('daymet_data/11929_1980_prcp.nc')
-#ds5b = xr.open_dataset('daymet_data/11929_1981_prcp.nc')
-#ds5c = xr.open_dataset('daymet_data/11929_1982_prcp.nc')
-#ds5d = xr.open_dataset('daymet_data/11929_1983_prcp.nc')
 
 # Tile 6
 ds6a = xr.open_dataset('daymet_data/11930_1980_prcp.nc')
-#ds6b = xr.open_dataset('daymet_data/11930_1981_prcp.nc')
-#ds6c = xr.open_dataset('daymet_data/11930_1982_prcp.nc')
-#ds6d = xr.open_dataset('daymet_data/11930_1983_prcp.nc')
 
 # grab lats
 lats_ds1 = ds1a["lat"]
@@ -257,7 +238,7 @@ MyTiles = [11748,11749,11750,11928,11929,11930]
 
 # I need 3D matrices:
     # each entry in order is x-index, y-index, and the year (or year and day)
-    # float is 8 bytes: 8 bytes * 237*196*42*365
+    # float is 8 bytes: 8 bytes * 237*196*42*365 ~ 6GB of RAM per array
 
 # Create our float arrays (x-index, y-index, years, dates) # generalize this later
 tile1_prcp = np.zeros((237,196,42,365)) # 11748 (y,x,year,day)
@@ -286,7 +267,7 @@ MyTileNames_Tmin = [tile1_tmin, tile2_tmin, tile3_tmin, tile4_tmin, tile5_tmin, 
 MyTileNames_Tmax = [tile1_tmax, tile2_tmax, tile3_tmax, tile4_tmax, tile5_tmax, tile6_tmax]
 
 ## Populate our arrays
-start = time.time() # let's time this (Run 1: 153.216 seconds)
+start = time.time() # let's time this
 for n in range(0,len(MyTiles)): # Loop over tiles
     MyTile = MyTiles[n]
     print('starting tile '+str(MyTile))
@@ -305,13 +286,62 @@ for n in range(0,len(MyTiles)): # Loop over tiles
             MyTileNames_Prcp[n][:,:,x,i] = nc_precip['prcp'][i,:,:]
             MyTileNames_Tmin[n][:,:,x,i] = nc_tmin['tmin'][i,:,:]
             MyTileNames_Tmax[n][:,:,x,i] = nc_tmax['tmax'][i,:,:]
+      
+# Let's save our numpy arrays
+np.save('tile1_prcp.npy', tile1_prcp)
+np.save('tile2_prcp.npy', tile2_prcp)
+np.save('tile3_prcp.npy', tile3_prcp)
+np.save('tile4_prcp.npy', tile4_prcp)
+np.save('tile5_prcp.npy', tile5_prcp)
+np.save('tile6_prcp.npy', tile6_prcp)
+
+np.save('tile1_tmin.npy', tile1_tmin)
+np.save('tile2_tmin.npy', tile2_tmin)
+np.save('tile3_tmin.npy', tile3_tmin)
+np.save('tile4_tmin.npy', tile4_tmin)
+np.save('tile5_tmin.npy', tile5_tmin)
+np.save('tile6_tmin.npy', tile6_tmin)
+
+np.save('tile1_tmax.npy', tile1_tmax)
+np.save('tile2_tmax.npy', tile2_tmax)
+np.save('tile3_tmax.npy', tile3_tmax)
+np.save('tile4_tmax.npy', tile4_tmax)
+np.save('tile5_tmax.npy', tile5_tmax)
+np.save('tile6_tmax.npy', tile6_tmax)
 
 end = time.time()
 print('duration:')
 print(end - start)
 print('MISCHIEF MANAGED!') 
-        
 
+#%% Load our arrays
+start = time.time() # let's time this # Run 1: 1.40 mins
+
+tile1_prcp = np.load('tile1_prcp.npy')
+tile2_prcp = np.load('tile2_prcp.npy')
+tile3_prcp = np.load('tile3_prcp.npy')
+tile4_prcp = np.load('tile4_prcp.npy')
+tile5_prcp = np.load('tile5_prcp.npy')
+tile6_prcp = np.load('tile6_prcp.npy')
+
+tile1_tmin = np.load('tile1_tmin.npy')
+tile2_tmin = np.load('tile2_tmin.npy')
+tile3_tmin = np.load('tile3_tmin.npy')
+tile4_tmin = np.load('tile4_tmin.npy')
+tile5_tmin = np.load('tile5_tmin.npy')
+tile6_tmin = np.load('tile6_tmin.npy')
+
+tile1_tmax = np.load('tile1_tmax.npy')
+tile2_tmax = np.load('tile2_tmax.npy')
+tile3_tmax = np.load('tile3_tmax.npy')
+tile4_tmax = np.load('tile4_tmax.npy')
+tile5_tmax = np.load('tile5_tmax.npy')
+tile6_tmax = np.load('tile6_tmax.npy')
+
+end = time.time()
+print('duration:')
+print(end - start)
+print('MISCHIEF MANAGED!') 
 
 #%% Let's grab precip data from each station for all 41 years (1980 - 2021)
 
@@ -376,15 +406,3 @@ plt.title('Correlation Matrix for yearly precipitation, 1980-2021', fontsize=16)
 
 # save the figure
 plt.savefig("exports/correlation_matrix.svg")
-   
-#%%
-#Plot
-plt.contourf(ds1a['prcp'][364,:,:])
-#plt.contourf(ds1a_numpy)
-#plt.contourf(ds2a_numpy)
-
-#%%
-# Read the shapefile
-huc4 = gpd.read_file("shapefiles/NHD_H_0410_HU4_Shape/Shape/WBDHU4.shp")
-huc4.plot() # plot it
-#plt.savefig("exports/shp.svg")
