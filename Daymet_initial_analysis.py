@@ -4,9 +4,6 @@ Initial analysis
 Goal: open .nc and .shp files in Python
 
 first create conda environment in miniconda:
-conda create -n spyder-geo
-conda activate spyder-geo
-conda install -c conda-forge spyder-kernels
 conda install -c conda-forge spyder
 conda install -c conda-forge xarray
 conda install -c conda-forge hmmlearn
@@ -18,8 +15,9 @@ import matplotlib.pyplot as plt
 import xarray as xr
 import numpy as np
 import time
-#from hmmlearn.hmm import GaussianHMM
-
+from hmmlearn.hmm import GaussianHMM
+import seaborn as sns
+from scipy import stats as ss
 
 #%% x array - open precip datafiles
 
@@ -409,12 +407,158 @@ plt.plot(PrecipData.index, PrecipData['Portage River'],'.')
 plt.xlabel("Day")
 plt.ylabel("Precipiation [mm]")
 
+#Optional - convert zeros to 1e-12
+PrecipData = PrecipData.replace(to_replace=0, value=1e-12)
+
+# Export the files
 plt.savefig("exports/Portage_River_Precip.svg")
+PrecipData.to_csv("centroids/Portage_River_PrecipData_nonzero.csv")
     
 end = time.time()
 print('duration:')
 print(end - start)
 print('MISCHIEF MANAGED!')     
+#%% Let's build a weather generator for Portage
+
+def fitHMM(Q, nSamples):
+    # fit Gaussian HMM to Q
+    model = GaussianHMM(n_components=2, n_iter=1000).fit(np.reshape(Q,[len(Q),1]))
+     
+    # classify each observation as state 0 or 1
+    hidden_states = model.predict(np.reshape(Q,[len(Q),1]))
+ 
+    # find parameters of Gaussian HMM
+    mus = np.array(model.means_)
+    sigmas = np.array(np.sqrt(np.array([np.diag(model.covars_[0]),np.diag(model.covars_[1])])))
+    P = np.array(model.transmat_)
+ 
+    # find log-likelihood of Gaussian HMM
+    logProb = model.score(np.reshape(Q,[len(Q),1]))
+ 
+    # generate nSamples from Gaussian HMM
+    samples = model.sample(nSamples)
+ 
+    # re-organize mus, sigmas and P so that first row is lower mean (if not already)
+    if mus[0] > mus[1]:
+        mus = np.flipud(mus)
+        sigmas = np.flipud(sigmas)
+        P = np.fliplr(np.flipud(P))
+        hidden_states = 1 - hidden_states
+ 
+    return hidden_states, mus, sigmas, P, logProb, samples
+
+# Load 42 years of daily precip data for Portage River
+Q = pd.read_csv('centroids/Portage_River_PrecipData_nonzero.csv')
+
+# log transform the data and fit the HMM
+logQ = np.log10(Q)
+hidden_states, mus, sigmas, P, logProb, samples = fitHMM(logQ, 100)
+
+#Plot hidden states
+def plotTimeSeries(Q, hidden_states, ylabel, filename):
+ 
+    sns.set()
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+ 
+    flag=True
+    if (flag):  
+        xs = np.arange(len(Q))+1909
+        masks = hidden_states == 0
+        ax.scatter(xs[masks], Q[masks], c='r', label='Dry State')
+        masks = hidden_states == 1
+        ax.scatter(xs[masks], Q[masks], c='b', label='Wet State')
+        #ax.plot(xs, Q, c='k')
+         
+        ax.set_xlabel('Day')
+        ax.set_ylabel(ylabel)
+        plt.title("Hidden States: Daily Precip for Portage River 1980-2021 ")
+        fig.subplots_adjust(bottom=0.2)
+        handles, labels = plt.gca().get_legend_handles_labels()
+        fig.legend(handles, labels, loc='lower center', ncol=2, frameon=True)
+        fig.savefig(filename)
+        fig.clf()
+    
+    else:
+        xs = np.arange(len(Q))+1909
+        masks = hidden_states == 0
+        ax.scatter(xs[masks], Q[masks], c='r', label='Dry State')
+        masks = hidden_states == 1
+        ax.scatter(xs[masks], Q[masks], c='b', label='Wet State')
+        ax.plot(xs, Q, c='k')
+         
+        ax.set_xlabel('Day')
+        ax.set_ylabel(ylabel)
+        plt.title("Hidden States: Daily Precip for Portage River 1980-2021 ")
+        fig.subplots_adjust(bottom=0.2)
+        handles, labels = plt.gca().get_legend_handles_labels()
+        fig.legend(handles, labels, loc='lower center', ncol=2, frameon=True)
+        fig.savefig(filename)
+        fig.clf()
+ 
+    return None
+
+plotTimeSeries(logQ, hidden_states, 'Log of Precipitation [mm]', 'exports/StateTseries_nonzero.svg')
+
+# what are the transition probabilities?
+print(P)
+
+# Plot states distributions
+def plotDistribution(Q, mus, sigmas, P, filename):
+ 
+    # calculate stationary distribution
+    eigenvals, eigenvecs = np.linalg.eig(np.transpose(P))
+    one_eigval = np.argmin(np.abs(eigenvals-1))
+    pi = eigenvecs[:,one_eigval] / np.sum(eigenvecs[:,one_eigval])
+ 
+    x_0 = np.linspace(mus[0]-4*sigmas[0], mus[0]+4*sigmas[0], 10000)
+    fx_0 = pi[0]*ss.norm.pdf(x_0,mus[0],sigmas[0])
+ 
+    x_1 = np.linspace(mus[1]-4*sigmas[1], mus[1]+4*sigmas[1], 10000)
+    fx_1 = pi[1]*ss.norm.pdf(x_1,mus[1],sigmas[1])
+ 
+    x = np.linspace(mus[0]-4*sigmas[0], mus[1]+4*sigmas[1], 10000)
+    fx = pi[0]*ss.norm.pdf(x,mus[0],sigmas[0]) + \
+        pi[1]*ss.norm.pdf(x,mus[1],sigmas[1])
+    
+    flag = True
+    if (flag):    
+        sns.set()
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        nonzero = np.where(Q>-10)[0]
+        Q = Q.to_numpy()
+        ax.hist(Q[nonzero], color='k', alpha=0.5, density=True)
+        #ax.hist(Q, color='k', alpha=0.5, density=True)
+        #l1, = ax.plot(x_0, fx_0, c='r', linewidth=2, label='Dry State Distn')
+        l2, = ax.plot(x_1, fx_1, c='b', linewidth=2, label='Wet State Distn')
+        #l3, = ax.plot(x, fx, c='k', linewidth=2, label='Combined State Distn')
+     
+        fig.subplots_adjust(bottom=0.15)
+        handles, labels = plt.gca().get_legend_handles_labels()
+        fig.legend(handles, labels, loc='lower center', ncol=3, frameon=True)
+        fig.savefig(filename)
+        fig.clf()
+    
+    else:
+        sns.set()
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.hist(Q, color='k', alpha=0.5, density=True)
+        l1, = ax.plot(x_0, fx_0, c='r', linewidth=2, label='Dry State Distn')
+        l2, = ax.plot(x_1, fx_1, c='b', linewidth=2, label='Wet State Distn')
+        l3, = ax.plot(x, fx, c='k', linewidth=2, label='Combined State Distn')
+     
+        fig.subplots_adjust(bottom=0.15)
+        handles, labels = plt.gca().get_legend_handles_labels()
+        fig.legend(handles, labels, loc='lower center', ncol=3, frameon=True)
+        fig.savefig(filename)
+        fig.clf()
+ 
+    return None
+ 
+plotDistribution(logQ, mus, sigmas, P, 'exports/MixedGaussianFit_nonzero_wet_original.svg')
+
 
 #%% Let's grab precip data from each location for all 41 years (1980 - 2021)
 
@@ -478,6 +622,7 @@ for n in range(len(locations)):
 
     MyIndexX = int(np.where(MyTileXs[MyTileIndex] == MyLonX)[0])
     MyIndexY = int(np.where(MyTileYs[MyTileIndex] == MyLatY)[0])
+    
     # grab the summed data
     PrecipData[MyColumn] = MyTileNames_Prcp_Summed[int(MyTileIndex)][MyIndexY,MyIndexX,:]
 
