@@ -18,3 +18,9 @@ shapefiles/WBD_04_HU2_Shape/WBD_04_HU2_Shape.xml
 shapefiles/WBD_04_HU2_Shape.zip
 centroids/Centroids_HUC12.xlsx
 centroids/Centroids_HUC12.qmd
+*.png
+*.png
+*.png
+centroids/Portage_River_PrecipDataMonthly.csv
+centroids/Portage_River_PrecipData_nonzero.csv
+centroids/Portage_River_PrecipData_nonzero.csv

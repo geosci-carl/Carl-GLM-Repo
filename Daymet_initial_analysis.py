@@ -394,25 +394,81 @@ MyIndexY = int(np.where(MyTileYs[MyTileIndex] == MyLatY)[0])
 
 
 # grab the data
-
 for i in range(len(MyYears)):
     print('Starting '+str(MyYears[i]))
     n=0+i*365 # start at the beginning of our time series
     m=n+365 # end at the 365th day
     PrecipData['Portage River'][n:m] = MyTileNames_Prcp[MyTileIndex][MyIndexY,MyIndexX,i]
-    
-# plot a time series
-plt.title("Daily Precipitation for Portage River HUC12 1980-2021 ")
-plt.plot(PrecipData.index, PrecipData['Portage River'],'.')    
-plt.xlabel("Day")
-plt.ylabel("Precipiation [mm]")
 
-#Optional - convert zeros to 1e-12
+#convert zeros to 1e-12 in case we want to work in logspace (daily) later
 PrecipData = PrecipData.replace(to_replace=0, value=1e-12)
 
+# Convert to monthly
+ones_data = np.ones(shape=(len(MyYears)*12,1))*-999
+PrecipDataMonthly = pd.DataFrame(ones_data)
+PrecipDataMonthly.columns = [mylocationname]
+
+for i in range(len(MyYears)): # for each year, calculate monthly values
+    n=0+i*365 # start at the beginning of our time series
+    
+    for k in range(12): # for each month, add up daily values 
+        if k==0: # january
+            monthstart = int(n) # jan starts on the 1st day of the year, or the 0th day
+            PrecipDataMonthly['Portage River'][k+i*12]=sum(PrecipData['Portage River'][monthstart:monthstart+31]) # jan has 31 days
+        
+        if k==1: # february
+            monthstart = n+31 # feb starts on the 32nd day of the year, or the 31st python day
+            PrecipDataMonthly['Portage River'][k+i*12]=sum(PrecipData['Portage River'][monthstart:monthstart+28]) # feb has 28 days
+            
+        if k==2: # march
+            monthstart = n+59 # mar starts on the 60th day of the year, or the 59th python day
+            PrecipDataMonthly['Portage River'][k+i*12]=sum(PrecipData['Portage River'][monthstart:monthstart+31]) # mar has 31 days
+            
+        if k==3: # april
+            monthstart = n+90 # apr starts on the 91st day of the year, or the 90th python day
+            PrecipDataMonthly['Portage River'][k+i*12]=sum(PrecipData['Portage River'][monthstart:monthstart+30]) # apr has 30 days   
+            
+        if k==4: # may
+            monthstart = n+120 # may starts on the 121st day of the year, or the 120th python day
+            PrecipDataMonthly['Portage River'][k+i*12]=sum(PrecipData['Portage River'][monthstart:monthstart+31]) # may has 31 days    
+
+        if k==5: # june
+            monthstart = n+151 # jun starts on the 152nd day of the year, or the 151st python day
+            PrecipDataMonthly['Portage River'][k+i*12]=sum(PrecipData['Portage River'][monthstart:monthstart+30]) # jun has 30 days     
+            
+        if k==6: # july
+            monthstart = n+181 # jul starts on the 182nd day of the year, or the 181st python day
+            PrecipDataMonthly['Portage River'][k+i*12]=sum(PrecipData['Portage River'][monthstart:monthstart+31]) # jul has 31 days 
+
+        if k==7: # august
+            monthstart = n+212 # aug starts on the 213th day of the year, or the 212th python day
+            PrecipDataMonthly['Portage River'][k+i*12]=sum(PrecipData['Portage River'][monthstart:monthstart+31]) # aug has 31 days 
+
+        if k==8: # september
+            monthstart = n+243 # sep starts on the 244th day of the year, or the 243rd python day
+            PrecipDataMonthly['Portage River'][k+i*12]=sum(PrecipData['Portage River'][monthstart:monthstart+30]) # sep has 30 days             
+ 
+        if k==9: # october
+            monthstart = n+273 # oct starts on the 274th day of the year, or the 273rd python day
+            PrecipDataMonthly['Portage River'][k+i*12]=sum(PrecipData['Portage River'][monthstart:monthstart+31]) # oct has 31 days 
+
+        if k==10: # november
+            monthstart = n+304 # nov starts on the 305th day of the year, or the 304th python day
+            PrecipDataMonthly['Portage River'][k+i*12]=sum(PrecipData['Portage River'][monthstart:monthstart+30]) # oct has 30 days 
+            
+        if k==11: # december
+            monthstart = n+334 # dec starts on the 335th day of the year, or the 334th python day
+            PrecipDataMonthly['Portage River'][k+i*12]=sum(PrecipData['Portage River'][monthstart:monthstart+31]) # dec has 31 days
+        
+# plot a time series
+plt.title("Monthly Precipitation for Portage River HUC12 1980-2021 ")
+plt.plot(PrecipDataMonthly.index, PrecipDataMonthly['Portage River'],'.')    
+plt.xlabel("Month")
+plt.ylabel("Precipiation [mm]")        
+        
 # Export the files
-plt.savefig("exports/Portage_River_Precip.svg")
-PrecipData.to_csv("centroids/Portage_River_PrecipData_nonzero.csv")
+plt.savefig("exports/Portage_River_Monthly_Precip.svg")
+PrecipDataMonthly.to_csv("centroids/Portage_River_PrecipDataMonthly.csv", index=False)
     
 end = time.time()
 print('duration:')
@@ -448,7 +504,7 @@ def fitHMM(Q, nSamples):
     return hidden_states, mus, sigmas, P, logProb, samples
 
 # Load 42 years of daily precip data for Portage River
-Q = pd.read_csv('centroids/Portage_River_PrecipData_nonzero.csv')
+Q = pd.read_csv('centroids/Portage_River_PrecipDataMonthly.csv')
 
 # log transform the data and fit the HMM
 logQ = np.log10(Q)
@@ -470,9 +526,9 @@ def plotTimeSeries(Q, hidden_states, ylabel, filename):
         ax.scatter(xs[masks], Q[masks], c='b', label='Wet State')
         #ax.plot(xs, Q, c='k')
          
-        ax.set_xlabel('Day')
+        ax.set_xlabel('Month')
         ax.set_ylabel(ylabel)
-        plt.title("Hidden States: Daily Precip for Portage River 1980-2021 ")
+        plt.title("Hidden States: Monthly Precip for Portage River 1980-2021 ")
         fig.subplots_adjust(bottom=0.2)
         handles, labels = plt.gca().get_legend_handles_labels()
         fig.legend(handles, labels, loc='lower center', ncol=2, frameon=True)
@@ -498,7 +554,7 @@ def plotTimeSeries(Q, hidden_states, ylabel, filename):
  
     return None
 
-plotTimeSeries(logQ, hidden_states, 'Log of Precipitation [mm]', 'exports/StateTseries_nonzero.svg')
+plotTimeSeries(logQ, hidden_states, 'Log of Precipitation [mm]', 'exports/StateTseries.png')
 
 # what are the transition probabilities?
 print(P)
@@ -521,8 +577,8 @@ def plotDistribution(Q, mus, sigmas, P, filename):
     fx = pi[0]*ss.norm.pdf(x,mus[0],sigmas[0]) + \
         pi[1]*ss.norm.pdf(x,mus[1],sigmas[1])
     
-    flag = True
-    if (flag):    
+    wet = False # set to false if you want to run the original code
+    if (wet):    # this code plots just the wet state distribution
         sns.set()
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -540,7 +596,7 @@ def plotDistribution(Q, mus, sigmas, P, filename):
         fig.savefig(filename)
         fig.clf()
     
-    else:
+    else: # this code shows combined wet and dry state distributions.
         sns.set()
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -557,8 +613,80 @@ def plotDistribution(Q, mus, sigmas, P, filename):
  
     return None
  
-plotDistribution(logQ, mus, sigmas, P, 'exports/MixedGaussianFit_nonzero_wet_original.svg')
+plotDistribution(logQ, mus, sigmas, P, 'exports/MixedGaussianFit.png')
 
+#%% Let's generate some monthly weather for portage river
+
+start = time.time() # let's time this
+
+mylocation = locations.loc[locations['Code']=='Portage River'] # portage river, HUC12 41000100502
+locationindex = 252 # for portage river
+mylocationname = locations.iloc[locationindex,1]
+
+
+niter = 12*len(MyYears) # generate 42 years of daily weather
+#ones_data = np.ones(shape=(niter,len(locations)))*-999 
+ones_data = np.ones(shape=(niter,1))*-999  # 1 for now
+GeneratedWeather = pd.DataFrame(ones_data)
+#GeneratedWeather.columns = [locations['Code']]
+GeneratedWeather.columns = [mylocationname] # 1 for now
+
+wet=0 #initialize our state variable
+options = ['dry','wet'] # initialize our state options
+
+for i in range(niter):
+    
+    if i==0: # start with month 0
+    
+        # determine starting state, pi    
+        eigenvals, eigenvecs = np.linalg.eig(np.transpose(P))
+        one_eigval = np.argmin(np.abs(eigenvals-1))
+        pi = eigenvecs[:,one_eigval] / np.sum(eigenvecs[:,one_eigval])
+        
+        #determine dry or wet        
+        draw = np.random.choice(options, 1, p=pi) # sample from `options` 1 time according to `pi`
+        
+        # assign state variable
+        if draw=='wet': 
+            wet=True
+        if draw!='wet':
+            wet=False        
+       
+    if i!=0: # if not month 0, we transition
+        if wet==False:    
+           draw = np.random.choice(options, 1, p=P[0,]) # sample from `options` 1 time according to P first row
+       
+        if wet==True:
+           draw = np.random.choice(options, 1, p=P[1,]) # sample from `options` 1 time according to P second row
+    
+        # assign state variable    
+        if draw=='wet': 
+            wet=True
+        if draw!='wet':
+            wet=False 
+           
+    # now get rain values
+    if wet==False:    
+        log_rain = float(np.random.normal(loc=mus[0], scale=sigmas[0],size=1)) 
+        GeneratedWeather[mylocationname][i]=10**(log_rain)
+        
+    if wet==True: # if wet, we draw from our distribution
+        log_rain = float(np.random.normal(loc=mus[1], scale=sigmas[1],size=1)) 
+        GeneratedWeather[mylocationname][i]=10**(log_rain)
+        
+# plot a time series
+plt.title("Monthly Precipitation for Portage River HUC12 [1980-2021] ")
+plt.plot(GeneratedWeather.index, GeneratedWeather['Portage River'],'.')    
+plt.xlabel("Day")
+plt.ylabel("Precipiation [mm]")    
+
+# Export the files
+plt.savefig("exports/Portage_River_Monthly_Precip_generated.svg")
+
+end = time.time()
+print('duration:')
+print(end - start)
+print('MISCHIEF MANAGED!')         
 
 #%% Let's grab precip data from each location for all 41 years (1980 - 2021)
 
