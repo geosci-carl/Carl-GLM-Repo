@@ -925,9 +925,9 @@ WeatherPs = pd.DataFrame(ones_data)
 WeatherPs.columns = ['P1','P2','P3','P4']
 
 # pi
-ones_data = np.ones(shape=(len(PrecipDataClean.columns),2))*-999
+ones_data = np.ones(shape=(len(PrecipDataClean.columns),1))*-999
 WeatherPi = pd.DataFrame(ones_data)
-WeatherPi.columns = ['pi1','pi2']
+WeatherPi.columns = ['pi']
 
 # Load 42 years of daily precip data for all centroids
 data = pd.read_csv('centroids/Centroids_PrecipDataMonthly.csv')
@@ -956,8 +956,7 @@ for x in range(len(PrecipDataClean.columns)):
     WeatherPs['P2'][x]=P[0,1]
     WeatherPs['P3'][x]=P[1,0]
     WeatherPs['P4'][x]=P[1,1]
-    WeatherPi['pi1'][x]=pi[0]
-    WeatherPi['pi2'][x]=pi[1]
+    WeatherPi['pi'][x]=pi[0]
     
 end = time.time()
 print('duration:')
@@ -967,10 +966,6 @@ print('MISCHIEF MANAGED!')
 
 start = time.time() # let's time this
 
-mylocation = locations.loc[locations['Code']=='Portage River'] # portage river, HUC12 41000100502
-locationindex = 252 # for portage river
-mylocationname = locations.iloc[locationindex,1]
-
 # create a dataframe
 ones_data = np.ones(shape=(12*len(MyYears),len(PrecipDataClean.columns)))*-999  # 1 for now
 GeneratedWeather = pd.DataFrame(ones_data)
@@ -979,54 +974,51 @@ GeneratedWeather.columns = [PrecipDataClean.columns] # each column is a HUC12
 wet=0 #initialize our state variable
 options = ['dry','wet'] # initialize our state options
 
-for i in range(len(GeneratedWeather)):
+for x in range(len(PrecipDataClean.columns)):
+    MyHUC = PrecipDataClean.columns[x]
+    print('//////////Starting '+str(MyHUC)+'//////////')
     
-    if i==0: # start with month 0
-    
-        # determine starting state, pi    
-        eigenvals, eigenvecs = np.linalg.eig(np.transpose(P))
-        one_eigval = np.argmin(np.abs(eigenvals-1))
-        pi = eigenvecs[:,one_eigval] / np.sum(eigenvecs[:,one_eigval])
-        
-        #determine dry or wet        
-        draw = np.random.choice(options, 1, p=pi) # sample from `options` 1 time according to `pi`
-        
-        # assign state variable
-        if draw=='wet': 
-            wet=True
-        if draw!='wet':
-            wet=False        
-       
-    if i!=0: # if not month 0, we transition
-        if wet==False:    
-           draw = np.random.choice(options, 1, p=P[0,]) # sample from `options` 1 time according to P first row
-       
-        if wet==True:
-           draw = np.random.choice(options, 1, p=P[1,]) # sample from `options` 1 time according to P second row
-    
-        # assign state variable    
-        if draw=='wet': 
-            wet=True
-        if draw!='wet':
-            wet=False 
-           
-    # now get rain values
-    if wet==False:    
-        log_rain = float(np.random.normal(loc=mus[0], scale=sigmas[0],size=1)) 
-        GeneratedWeather[mylocationname][i]=10**(log_rain)
-        
-    if wet==True: # if wet, we draw from our distribution
-        log_rain = float(np.random.normal(loc=mus[1], scale=sigmas[1],size=1)) 
-        GeneratedWeather[mylocationname][i]=10**(log_rain)
-        
-# plot a time series
-plt.title("Monthly Precipitation for Portage River HUC12 [1980-2021] ")
-plt.plot(GeneratedWeather.index, GeneratedWeather['Portage River'],'.')    
-plt.xlabel("Day")
-plt.ylabel("Precipiation [mm]")    
+    # pull variables   
+    pi = WeatherPi['pi'][x]
+    mus = [WeatherMus['mu1'][x],WeatherMus['mu2'][x]]
+    sigmas = [WeatherSigmas['sigma1'][x], WeatherSigmas['sigma2'][x]]
 
-# Export the files
-plt.savefig("exports/Portage_River_Monthly_Precip_generated.svg")
+    for i in range(len(GeneratedWeather)):
+        
+        if i==0: # start with month 0
+            
+            #determine dry or wet        
+            draw = np.random.choice(options, 1, p=(pi,1-pi)) # sample from `options` 1 time according to `pi`
+            
+            # assign state variable
+            if draw=='wet': 
+                wet=True
+            if draw!='wet':
+                wet=False        
+           
+        if i!=0: # if not month 0, we transition
+        
+            if wet==False:    
+               draw = np.random.choice(options, 1, p=[WeatherPs['P1'][x], WeatherPs['P2'][x]]) # sample from `options` 1 time according to P first row
+           
+            if wet==True:
+               draw = np.random.choice(options, 1, p=[WeatherPs['P3'][x], WeatherPs['P4'][x]]) # sample from `options` 1 time according to P second row
+        
+            # assign state variable    
+            if draw=='wet': 
+                wet=True
+            if draw!='wet':
+                wet=False 
+               
+        # now get rain values
+        if wet==False:    
+            log_rain = float(np.random.normal(loc=mus[0], scale=sigmas[0],size=1)) 
+            GeneratedWeather.loc[i,MyHUC]=10**(log_rain)
+            
+        if wet==True: # if wet, we draw from our distribution
+            log_rain = float(np.random.normal(loc=mus[1], scale=sigmas[1],size=1)) 
+            GeneratedWeather.loc[i,MyHUC]=10**(log_rain)
+        
 
 end = time.time()
 print('duration:')
