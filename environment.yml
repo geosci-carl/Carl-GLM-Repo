@@ -1,0 +1,12 @@
+name: geo3
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python
+  - spyder
+  - matplotlib
+  - xarray
+  - hmmlearn
+  - seaborn
+prefix: C:\ProgramData\miniforge3\envs\geo3
