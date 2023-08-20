@@ -481,6 +481,9 @@ print(end - start)
 print('MISCHIEF MANAGED!')     
 #%% Let's build a weather generator for Portage
 
+# Functions were taken from a Water Programming blog post by Julie Quinn. For more information, see:
+# https://waterprogramming.wordpress.com/2018/07/03/fitting-hidden-markov-models-part-ii-sample-python-script/
+
 def fitHMM(Q, nSamples):
     # fit Gaussian HMM to Q
     model = GaussianHMM(n_components=2, n_iter=1000).fit(np.reshape(Q,[len(Q),1]))
@@ -630,10 +633,8 @@ mylocationname = locations.iloc[locationindex,1]
 
 
 niter = 12*len(MyYears) # generate 42 years of daily weather
-#ones_data = np.ones(shape=(niter,len(locations)))*-999 
 ones_data = np.ones(shape=(niter,1))*-999  # 1 for now
 GeneratedWeather = pd.DataFrame(ones_data)
-#GeneratedWeather.columns = [locations['Code']]
 GeneratedWeather.columns = [mylocationname] # 1 for now
 
 wet=0 #initialize our state variable

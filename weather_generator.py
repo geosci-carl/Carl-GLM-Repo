@@ -481,6 +481,10 @@ print(end - start)
 print('MISCHIEF MANAGED!')
 
 #%% Let's build a weather generator for all of our centroids
+
+# Functions were taken from a Water Programming blog post by Julie Quinn. For more information, see:
+# https://waterprogramming.wordpress.com/2018/07/03/fitting-hidden-markov-models-part-ii-sample-python-script/
+
 start = time.time() # takes about 15 seconds
 
 # Functions first
@@ -615,7 +619,7 @@ print('MISCHIEF MANAGED!')
 start = time.time() # takes about 35 seconds
 
 # create a dataframe
-ones_data = np.ones(shape=(12*len(MyYears),len(PrecipDataClean.columns)))*-999  # 1 for now
+ones_data = np.ones(shape=(12*len(MyYears),len(PrecipDataClean.columns)))*-999
 GeneratedWeather = pd.DataFrame(ones_data)
 GeneratedWeather.columns = [PrecipDataClean.columns] # each column is a HUC12
 
