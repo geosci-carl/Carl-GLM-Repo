@@ -14,4 +14,4 @@ Created by Carl Fredrick G. Aquino. Questions? Contact me at geosci.carl@gmail.c
 I had an issue running hmmlearn (hidden markov model plugin) on my Windows machine.  Here was my solution:
 1. Completely uninstall Anaconda/Miniconda
 2. Install Conda using Miniforge (https://github.com/conda-forge/miniforge)
-3. Install all packages through conda-forge
+3. Install all packages through conda-forge (within Miniforge, follow steps 1 and 2 above to install and activate environment)
