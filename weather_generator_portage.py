@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Initial analysis
-Goal: open .nc and .shp files in Python
-
-first create conda environment in miniconda:
-conda install -c conda-forge spyder
-conda install -c conda-forge xarray
-conda install -c conda-forge hmmlearn
+create a weather generator for the Portage River HUC-12 location (41000100502)
 
 """
 #%%

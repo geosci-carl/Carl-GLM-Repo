@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Initial analysis
-Goal: open .nc and .shp files in Python
-
-first create conda environment in miniconda:
-conda install -c conda-forge spyder
-conda install -c conda-forge xarray
-conda install -c conda-forge hmmlearn
+create a yearly precip correlation matrix for the HUC-12 locations
 
 """
 #%%
@@ -15,9 +9,6 @@ import matplotlib.pyplot as plt
 import xarray as xr
 import numpy as np
 import time
-from hmmlearn.hmm import GaussianHMM
-import seaborn as sns
-from scipy import stats as ss
 
 #%% x array - open precip datafiles
 
