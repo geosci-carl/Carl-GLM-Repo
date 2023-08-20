@@ -1,1 +1,1 @@
-this folder contains daymet data
+daymet data should go here. visit https://github.com/ornldaac/daymet-TDStiles-batch for more info

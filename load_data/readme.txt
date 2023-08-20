@@ -1,0 +1,1 @@
+master data arrays will go here. after creating them, you can load them by setting build = False and load = True to avoid having to recreate these every time.

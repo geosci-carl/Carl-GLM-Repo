@@ -25,3 +25,4 @@ centroids/Portage_River_PrecipDataMonthly.csv
 centroids/Portage_River_PrecipData_nonzero.csv
 centroids/Portage_River_PrecipData_nonzero.csv
 centroids/Centroids_PrecipDataMonthly.csv
+exports/Centroids_GeneratedWeather.csv
