@@ -11,8 +11,7 @@ Created by Carl Fredrick G. Aquino. Questions? Contact me at geosci.carl@gmail.c
 8. To create a yearly precip correlation matrix for the HUC-12 locations, run `Daymet_initial_analysis.py`.
 
 ## Note for Windows Machines:
-I had an issue running hmmlearn (hidden markov model plugin) on my Windows machine. 
-Here was my solution:
-(1) completely uninstall Miniconda
-(2) install Conda using Miniforge (https://github.com/conda-forge/miniforge)
-(3) install all packages through conda-forge
+I had an issue running hmmlearn (hidden markov model plugin) on my Windows machine.  Here was my solution:
+1. Completely uninstall Miniconda
+2. Install Conda using Miniforge (https://github.com/conda-forge/miniforge)
+3. Install all packages through conda-forge
